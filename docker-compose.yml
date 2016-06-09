@@ -1,0 +1,49 @@
+version: '2'
+services:
+  drone-server:
+    image: drone/drone:0.5
+    ports:
+      - "8000:8000"
+    networks:
+      - drone
+    volumes:
+      - ./drone-data:/var/lib/drone/
+    environment:
+      I_UNDERSTAND_I_AM_USING_AN_UNSTABLE_VERSION: "true"
+      I_AGREE_TO_FIX_BUGS_AND_NOT_FILE_BUGS: "true"
+      DRONE_SERVER_ADDR: ":8000"
+      DRONE_DEBUG: "true"
+      # CHANGEME: Randomly generate something at least 24 characters long with
+      # a password generator.
+      DRONE_SECRET: "replace-this-with-your-own-random-secret"
+      DRONE_DATABASE_DRIVER: sqlite3
+      DRONE_DATABASE_DATASOURCE: /var/lib/drone/drone.sqlite
+      DRONE_OPEN: "true"
+      DRONE_ORGS: ""
+      # CHANGEME: Replace with Github username(s) to grant admin privs to.
+      DRONE_ADMIN: admin,users,here
+      DRONE_ADMIN_ALL: "false"
+      DRONE_GITHUB: "true"
+      # CHANGEME: Swap your Github OAuth application's credentials in here.
+      DRONE_GITHUB_CLIENT: xxxxxxxxxxxxxxxxxxxx
+      DRONE_GITHUB_SECRET: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  drone-agent:
+    image: drone/drone:0.5
+    command: agent
+    depends_on:
+      - drone-server
+    networks:
+      - drone
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      I_UNDERSTAND_I_AM_USING_AN_UNSTABLE_VERSION: "true"
+      I_AGREE_TO_FIX_BUGS_AND_NOT_FILE_BUGS: "true"
+      DRONE_SERVER: http://drone-server:8000
+      DRONE_DEBUG: "true"
+      # CHANGEME: Change this to match the DRONE_SECRET value specified in your
+      # drone-server container above.
+      DRONE_SECRET: "replace-this-with-your-own-random-secret"
+networks:
+  drone:
+    driver: bridge
